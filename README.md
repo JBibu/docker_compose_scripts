@@ -1,4 +1,4 @@
-# Odoo Docker Management Scripts
+![image](https://github.com/user-attachments/assets/42b925c8-9780-47e6-9b85-4285ffe9dda7)
 
 A production-ready Docker Compose management collection specifically designed for Odoo developers. These scripts provide streamlined deployment and management of Odoo instances with enterprise-grade reliability and developer-focused workflows.
 
