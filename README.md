@@ -1,78 +1,78 @@
-![image](https://github.com/user-attachments/assets/3b812131-5959-46bd-b866-993cd28c97c2)
+# Odoo Docker Management Scripts
 
-A collection of production-ready Docker Compose management scripts for popular applications and services. Each script provides an intuitive interface for managing containerized applications with minimal configuration.
+A production-ready Docker Compose management collection specifically designed for Odoo developers. These scripts provide streamlined deployment and management of Odoo instances with enterprise-grade reliability and developer-focused workflows.
 
 ## 🎯 Overview
 
-This repository contains standalone management scripts that simplify Docker Compose operations for various applications. Each script is designed to be:
+This repository contains professional-grade Docker Compose management scripts tailored for Odoo development and deployment. Each script is engineered for production environments with:
 
-- **Self-contained**: Everything needed in a single executable script
-- **Production-ready**: Includes proper error handling, logging, and safety checks
-- **User-friendly**: Interactive menus and clear command-line interfaces
-- **Configurable**: Environment-based configuration with sensible defaults
-- **Cross-platform**: Works on Linux, macOS, and Windows (with WSL)
+- **Production-Ready Architecture**: Enterprise-level error handling, logging, and safety mechanisms
+- **Developer-Centric Design**: Optimized workflows for Odoo development cycles
+- **Self-Contained Execution**: Complete functionality in standalone scripts
+- **Environment-Based Configuration**: Flexible configuration with production defaults
+- **Cross-Platform Compatibility**: Linux, macOS, and Windows (WSL) support
 
-## 🔧 General Requirements
+## 🔧 Requirements
 
-All scripts in this repository require:
-
+### Core Dependencies
 - **Docker Engine** (20.10.0 or later)
 - **Docker Compose** (v2.0.0 or later)
 - **Bash** (4.0 or later)
-- **Basic system utilities**: `curl`, `wget`, `grep`, `awk`
+- **System Utilities**: `curl`, `wget`, `grep`, `awk`
 
-### Platform-Specific Notes
+### Platform Requirements
 
 **Linux**:
-- Most distributions supported out of the box
-- SELinux configurations handled automatically (Fedora/RHEL/CentOS)
-- sudo access may be required for some operations
+- Production-tested on major distributions
+- Automatic SELinux configuration (RHEL/CentOS/Fedora)
+- Sudo privileges required for system-level operations
 
 **macOS**:
-- Requires Docker Desktop
-- All scripts tested on macOS 11+ (Big Sur and later)
+- Docker Desktop required
+- Validated on macOS 11+ (Big Sur and later)
 
 **Windows**:
-- Requires WSL2 with Docker Desktop
-- Ubuntu or similar Linux distribution in WSL recommended
+- WSL2 with Docker Desktop
+- Ubuntu-based WSL distribution recommended
 
-## 📦 Available Scripts
+## 📦 Odoo Docker Manager
 
-### Odoo Docker Manager
-**Location**: `odoo/odoo_docker_manager.sh`
+**Script Location**: `odoo/odoo_docker_manager.sh`
 
-A comprehensive management script for Odoo ERP.
+Production-grade Odoo ERP management solution designed for enterprise deployments and development workflows.
 
-**Features**:
-- 🚀 One-command Odoo deployment
-- 🔧 Custom package installation (APT + Python pip)
-- 📦 Extra modules management
-- 🛡️ SELinux automatic configuration
-- 🔄 Built-in backup and restore capabilities
-- 📊 Real-time monitoring and logs
-- 🎨 Interactive terminal UI
+### Core Features
 
-**Quick Setup**:
+- 🚀 **One-Command Deployment**: Complete Odoo stack initialization
+- 🔧 **Package Management**: Automated APT and Python pip package installation
+- 📦 **Module Management**: Enterprise module installation and configuration
+- 🛡️ **Security Hardening**: Automatic SELinux configuration and security policies
+- 🔄 **Backup/Restore Operations**: Production-grade data protection
+- 📊 **Monitoring & Logging**: Real-time performance monitoring and log aggregation
+- 🎨 **Interactive Interface**: Professional terminal-based management UI
+
+### Quick Start
+
 ```bash
-# Clone and setup
+# Repository setup
 git clone https://github.com/JBibu/docker_compose_scripts.git
 cd docker_compose_scripts/odoo
 chmod +x odoo_docker_manager.sh
 
-# Start interactive mode
+# Interactive management interface
 ./odoo_docker_manager.sh
 
-# Or use direct commands
+# Direct command execution
 ./odoo_docker_manager.sh start
 ./odoo_docker_manager.sh help
 ```
 
-[📖 View full Odoo documentation →](odoo/README.md)
+### Production Deployment
 
----
+For production environments, review the comprehensive documentation:
 
-*More scripts coming soon! See [Contributing](#contributing) to add your own.*
+[📖 Complete Odoo Documentation →](odoo/README.md)
 
 ## 📄 License
 
-This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+Licensed under GPL-3.0 License. See [LICENSE](LICENSE) for complete terms and conditions.
