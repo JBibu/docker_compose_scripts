@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/c6daeed9-20dd-4561-8464-60ab88662668)
+![image](https://github.com/user-attachments/assets/3b812131-5959-46bd-b866-993cd28c97c2)
 
 A collection of production-ready Docker Compose management scripts for popular applications and services. Each script provides an intuitive interface for managing containerized applications with minimal configuration.
 
