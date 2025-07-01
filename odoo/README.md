@@ -1,26 +1,25 @@
 # Odoo Docker Manager
 
-A simple management script for deploying Odoo ERP with Docker Compose. One command setup with PostgreSQL, custom modules, and package management.
+Management script for deploying Odoo ERP with Docker Compose. Sets up Odoo with PostgreSQL, custom modules, and package management in one command.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Make executable and run
 chmod +x odoo_docker_manager.sh
 ./odoo_docker_manager.sh
-
 # Access Odoo at http://localhost:8069
 ```
 
-## ✨ Features
+## Features
 
-- 🎛️ **Interactive menu** - Easy point-and-click interface
-- 📦 **Custom packages** - Install APT and Python packages
-- 🔧 **Module management** - Drag-drop modules in `extra-addons/`
-- 🛡️ **SELinux support** - Auto-configuration for RHEL/Fedora
-- 📊 **Real-time logs** - Monitor with `./odoo_docker_manager.sh logs`
+- Interactive menu interface
+- Install APT and Python packages
+- Module management - drop modules in `extra-addons/`
+- SELinux configuration for RHEL/Fedora
+- Real-time logs with `./odoo_docker_manager.sh logs`
 
-## ⚙️ Configuration
+## Configuration
 
 Edit `.env` file (created automatically):
 
@@ -34,13 +33,13 @@ POSTGRES_PASSWORD=odoo            # Database password
 
 After changes: `./odoo_docker_manager.sh rebuild`
 
-## 📦 Custom Modules
+## Custom Modules
 
 1. Copy modules to `extra-addons/` directory
 2. Restart: `./odoo_docker_manager.sh restart`
 3. In Odoo: Apps → Update Apps List
 
-## 🎮 Commands
+## Commands
 
 ```bash
 ./odoo_docker_manager.sh start           # Start services
@@ -53,7 +52,7 @@ After changes: `./odoo_docker_manager.sh rebuild`
 ./odoo_docker_manager.sh help            # Show help
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 **Permission errors**: `./odoo_docker_manager.sh fix-permissions`
 
@@ -66,7 +65,7 @@ sudo chcon -Rt svirt_sandbox_file_t extra-addons/
 
 **Module not showing**: Check `extra-addons/module/__manifest__.py` exists
 
-## 📋 Requirements
+## Requirements
 
 - Docker & Docker Compose
 - 4GB RAM recommended
