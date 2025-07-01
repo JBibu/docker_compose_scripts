@@ -25,7 +25,7 @@ chmod +x odoo_docker_manager.sh
 Edit `.env` file (created automatically):
 
 ```bash
-ODOO_VERSION=18                    # Odoo version
+ODOO_VERSION=18                   # Odoo version
 ODOO_PORT=8069                    # Access port
 APT_PACKAGES=git curl             # System packages
 PIP_PACKAGES=requests pillow      # Python packages
