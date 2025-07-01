@@ -87,7 +87,7 @@ setup_permissions() {
     fi
     
     # Apply basic permissions
-    chmod 777 "$dir_path" 2>/dev/null || true
+    chmod -R 777 "$dir_path" 2>/dev/null || true
     
     # Try to apply correct owner (odoo user = 101:101)
     if command -v sudo >/dev/null 2>&1; then
@@ -267,54 +267,33 @@ setup_project() {
 # New function: Fix permissions
 fix_permissions() {
     clear_screen
-    log "Applying permission fixes..."
-    
-    # Stop services if they are running
-    local status=$(get_status)
-    if [[ "$status" == "running" ]]; then
-        log "Stopping services temporarily..."
-        docker compose -f "$COMPOSE_FILE" down >/dev/null 2>&1
+    log "Applying 777 permissions to extra-addons..."
+
+    local dir_path="$SCRIPT_DIR/extra-addons"
+
+    # Create directory if it doesn't exist
+    if [[ ! -d "$dir_path" ]]; then
+        mkdir -p "$dir_path"
+        success "extra-addons directory created"
     fi
-    
-    # Recreate directory with full permissions
-    if [[ -d "$SCRIPT_DIR/extra-addons" ]]; then
-        # Backup if there's content
-        if [[ -n "$(ls -A "$SCRIPT_DIR/extra-addons" 2>/dev/null)" ]]; then
-            log "Creating backup of content..."
-            cp -r "$SCRIPT_DIR/extra-addons" "$SCRIPT_DIR/extra-addons.backup.$(date +%Y%m%d_%H%M%S)"
-        fi
-        
-        # Recreate directory
-        sudo rm -rf "$SCRIPT_DIR/extra-addons" 2>/dev/null || rm -rf "$SCRIPT_DIR/extra-addons"
+
+    # Apply recursive chmod 777
+    if sudo chmod -R 777 "$dir_path"; then
+        success "777 permissions applied recursively to extra-addons"
+    else
+        error "Could not apply permissions"
     fi
-    
-    mkdir -p "$SCRIPT_DIR/extra-addons"
-    
-    # Apply permissions
-    if sudo chown -R 101:101 "$SCRIPT_DIR/extra-addons" 2>/dev/null; then
-        success "Owner configured: 101:101"
-    fi
-    chmod -R 777 "$SCRIPT_DIR/extra-addons" 2>/dev/null || true
-    
-    # Apply SELinux
+
+    # Apply SELinux fix if available
     check_and_configure_selinux
-    
-    # Restore backup if there was content
-    local backup_dir=$(ls -td "$SCRIPT_DIR/extra-addons.backup."* 2>/dev/null | head -1)
-    if [[ -n "$backup_dir" && -d "$backup_dir" ]]; then
-        log "Restoring modules from backup..."
-        cp -r "$backup_dir"/* "$SCRIPT_DIR/extra-addons/" 2>/dev/null || true
-        sudo chown -R 101:101 "$SCRIPT_DIR/extra-addons" 2>/dev/null || true
-        chmod -R 777 "$SCRIPT_DIR/extra-addons" 2>/dev/null || true
-        check_and_configure_selinux
-    fi
-    
-    success "Permissions fixed"
-    
-    # Restart services if they were running
-    if [[ "$status" == "running" ]]; then
-        log "Restarting services..."
-        start
+
+    # Show directory contents
+    local module_count=$(find "$dir_path" -maxdepth 1 -type d ! -path "$dir_path" 2>/dev/null | wc -l)
+    if [[ $module_count -gt 0 ]]; then
+        info "Modules found: $module_count"
+        ls -la "$dir_path" | grep '^d' | awk '{print "  -", $9}' | grep -v '^\s*-\s*\.$' | grep -v '^\s*-\s*\.\.$'
+    else
+        info "No modules in extra-addons"
     fi
 }
 
