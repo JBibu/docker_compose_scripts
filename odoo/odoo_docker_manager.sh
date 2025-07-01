@@ -36,26 +36,26 @@ check_deps() {
         error "Docker is not installed. Visit: https://docs.docker.com/get-docker/"
         exit 1
     fi
-    
+
     if ! docker compose version >/dev/null 2>&1; then
         error "Docker Compose is not available"
         exit 1
     fi
 }
 
-# New function: Detect and configure SELinux
+# Función para detectar y configurar SELinux (solo se usa en fix_permissions)
 check_and_configure_selinux() {
     # Check if SELinux is available and active
     if command -v getenforce >/dev/null 2>&1; then
         local selinux_status=$(getenforce 2>/dev/null || echo "Disabled")
-        
+
         if [[ "$selinux_status" == "Enforcing" ]]; then
             warn "SELinux detected in Enforcing mode"
-            
+
             # Check if extra-addons directory exists
             if [[ -d "$SCRIPT_DIR/extra-addons" ]]; then
                 log "Applying SELinux context for Docker..."
-                
+
                 # Apply SELinux context for containers
                 if sudo chcon -Rt svirt_sandbox_file_t "$SCRIPT_DIR/extra-addons" 2>/dev/null; then
                     success "SELinux context applied correctly"
@@ -63,7 +63,7 @@ check_and_configure_selinux() {
                     warn "Could not apply SELinux context automatically"
                     info "Run manually: sudo chcon -Rt svirt_sandbox_file_t $SCRIPT_DIR/extra-addons"
                 fi
-                
+
                 # Enable container policy if possible
                 if sudo setsebool -P container_manage_cgroup on 2>/dev/null; then
                     success "SELinux policy for containers enabled"
@@ -77,34 +77,29 @@ check_and_configure_selinux() {
     fi
 }
 
-# New function: Setup improved permissions
-setup_permissions() {
+# Función para crear directorio con permisos básicos para Odoo
+ensure_extra_addons_dir() {
     local dir_path="$SCRIPT_DIR/extra-addons"
-    
+
     if [[ ! -d "$dir_path" ]]; then
         mkdir -p "$dir_path"
-        success "extra-addons directory created"
-    fi
-    
-    # Apply basic permissions
-    chmod -R 777 "$dir_path" 2>/dev/null || true
-    
-    # Try to apply correct owner (odoo user = 101:101)
-    if command -v sudo >/dev/null 2>&1; then
-        if sudo chown -R 101:101 "$dir_path" 2>/dev/null; then
-            success "Owner configured: odoo (101:101)"
-        else
-            warn "Could not configure owner, applying broad permissions"
-            chmod -R 777 "$dir_path" 2>/dev/null || true
+
+        # Apply correct owner (odoo user = 101:101) and permissions
+        if command -v sudo >/dev/null 2>&1; then
+            if sudo chown -R 101:101 "$dir_path" 2>/dev/null; then
+                success "extra-addons directory created with owner 101:101"
+            else
+                warn "Could not set owner, directory created with current user"
+            fi
         fi
-    else
-        # If no sudo, apply broader permissions
-        chmod -R 777 "$dir_path" 2>/dev/null || true
-        info "Broad permissions applied (no sudo available)"
+
+        # Apply 777 permissions recursively
+        if chmod -R 777 "$dir_path" 2>/dev/null; then
+            success "777 permissions applied to extra-addons"
+        else
+            warn "Could not apply 777 permissions"
+        fi
     fi
-    
-    # Configure SELinux if necessary
-    check_and_configure_selinux
 }
 
 load_env_vars() {
@@ -116,7 +111,7 @@ load_env_vars() {
 create_env_template() {
     local env_file="$SCRIPT_DIR/.env"
     [[ -f "$env_file" ]] && return
-    
+
     cat > "$env_file" << 'EOF'
 # Odoo version to use
 ODOO_VERSION=18
@@ -142,10 +137,10 @@ EOF
 
 generate_dockerfile() {
     local dockerfile_path="$SCRIPT_DIR/Dockerfile"
-    
+
     # Load variables from .env
     load_env_vars
-    
+
     local base_version="${ODOO_VERSION:-18}"
     local apt_packages="${APT_PACKAGES:-}"
     local pip_packages="${PIP_PACKAGES:-}"
@@ -188,12 +183,12 @@ EOF
         echo "# No additional Python packages configured" >> "$dockerfile_path"
     fi
 
-    success "Dockerfile generated for Odoo $base_version (with improved permissions)"
-    
+    success "Dockerfile generated for Odoo $base_version"
+
     if [[ -n "$apt_packages" ]]; then
         info "APT packages: $apt_packages"
     fi
-    
+
     if [[ -n "$pip_packages" ]]; then
         info "Python packages: $pip_packages (installed with --break-system-packages)"
     fi
@@ -201,15 +196,15 @@ EOF
 
 create_compose() {
     [[ -f "$COMPOSE_FILE" ]] && return
-    
+
     # Load variables from .env
     load_env_vars
-    
+
     local odoo_port="${ODOO_PORT:-8069}"
     local postgres_user="${POSTGRES_USER:-odoo}"
     local postgres_password="${POSTGRES_PASSWORD:-odoo}"
     local postgres_db="${POSTGRES_DB:-postgres}"
-    
+
     cat > "$COMPOSE_FILE" << EOF
 services:
   db:
@@ -254,17 +249,17 @@ EOF
 
 setup_project() {
     log "Setting up project..."
-    
+
     create_env_template
     load_env_vars
     generate_dockerfile
     create_compose
-    setup_permissions  # New function with SELinux handling
-    
+    ensure_extra_addons_dir  # Solo crea el directorio, sin permisos especiales
+
     success "Project configured"
 }
 
-# New function: Fix permissions
+# Función específica para arreglar permisos (SOLO se ejecuta con la opción 5)
 fix_permissions() {
     clear_screen
     log "Applying 777 permissions to extra-addons..."
@@ -301,7 +296,7 @@ get_status() {
     local odoo_running=$(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*odoo"' | grep -q '"State":"running"' && echo "true" || echo "false")
     local db_running=$(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*db"' | grep -q '"State":"running"' && echo "true" || echo "false")
     local services_exist=$(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep -q '"Name":".*odoo"' && echo "true" || echo "false")
-    
+
     if [[ "$odoo_running" == "true" && "$db_running" == "true" ]]; then
         echo "running"
     elif [[ "$services_exist" == "true" ]]; then
@@ -317,15 +312,15 @@ show_status() {
     local modules=$(find "$SCRIPT_DIR/extra-addons" -maxdepth 1 -type d ! -path "$SCRIPT_DIR/extra-addons" 2>/dev/null | wc -l)
     local odoo_version="${ODOO_VERSION:-18}"
     local odoo_port="${ODOO_PORT:-8069}"
-    
+
     # Detailed status of individual services
     local odoo_status=$(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*odoo"' | grep -q '"State":"running"' && echo "🟢 Running" || echo "🔴 Stopped")
     local db_status=$(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*db"' | grep -q '"State":"running"' && echo "🟢 Running" || echo "🔴 Stopped")
-    
+
     echo -e "${BOLD}📊 System Status:${NC}"
     echo "  Odoo $odoo_version: $odoo_status"
     echo "  PostgreSQL: $db_status"
-    
+
     # Show SELinux status if available
     if command -v getenforce >/dev/null 2>&1; then
         local selinux_status=$(getenforce 2>/dev/null || echo "Error")
@@ -336,22 +331,22 @@ show_status() {
         echo "  SELinux: $selinux_icon $selinux_status"
     fi
     echo ""
-    
+
     case $status in
         "running")
             success "Complete stack running"
             info "Web access: http://localhost:$odoo_port"
             ;;
-        "stopped") 
-            warn "Stack stopped - use 'Start' option" 
+        "stopped")
+            warn "Stack stopped - use 'Start' option"
             ;;
-        *) 
-            info "Stack not configured" 
+        *)
+            info "Stack not configured"
             ;;
     esac
-    
+
     [[ $modules -gt 0 ]] && info "Extra modules available: $modules"
-    
+
     # Show custom configuration
     if [[ -n "${APT_PACKAGES:-}" ]] || [[ -n "${PIP_PACKAGES:-}" ]]; then
         echo ""
@@ -366,26 +361,24 @@ start() {
     clear_screen
     load_env_vars
     log "Starting Odoo services..."
-    
+
     local odoo_port="${ODOO_PORT:-8069}"
-    
-    # Check and configure permissions before starting
-    setup_permissions
-    
+
     if docker compose -f "$COMPOSE_FILE" up -d --build; then
         success "Odoo started successfully"
         info "Web access: http://localhost:$odoo_port"
         [[ -d "$SCRIPT_DIR/extra-addons" ]] && info "To use extra modules: Apps > Update Apps List"
+        info "If you have permission issues, use option 5 to fix permissions"
     else
         error "Error starting Odoo"
-        warn "If there are permission issues, run: ./odoo_docker_manager.sh fix-permissions"
+        warn "If there are permission issues, use option 5 to fix permissions"
     fi
 }
 
 stop() {
     clear_screen
     log "Stopping Odoo services..."
-    
+
     if docker compose -f "$COMPOSE_FILE" down; then
         success "Odoo stopped successfully"
     else
@@ -397,18 +390,16 @@ restart() {
     clear_screen
     load_env_vars
     log "Restarting Odoo services..."
-    
+
     local odoo_port="${ODOO_PORT:-8069}"
-    
-    # Check and configure permissions before restarting
-    setup_permissions
-    
+
     if docker compose -f "$COMPOSE_FILE" restart; then
         success "Odoo restarted successfully"
         info "Web access: http://localhost:$odoo_port"
+        info "If you have permission issues, use option 5 to fix permissions"
     else
         error "Error restarting Odoo"
-        warn "If there are permission issues, run: ./odoo_docker_manager.sh fix-permissions"
+        warn "If there are permission issues, use option 5 to fix permissions"
     fi
 }
 
@@ -416,21 +407,19 @@ rebuild() {
     clear_screen
     load_env_vars
     log "Rebuilding Odoo image..."
-    
+
     local odoo_port="${ODOO_PORT:-8069}"
-    
+
     # Regenerate Dockerfile with current configuration
     generate_dockerfile
-    
-    # Check and configure permissions before rebuilding
-    setup_permissions
-    
+
     if docker compose -f "$COMPOSE_FILE" up -d --build --force-recreate; then
         success "Image rebuilt and Odoo started successfully"
         info "Web access: http://localhost:$odoo_port"
+        info "If you have permission issues, use option 5 to fix permissions"
     else
         error "Error rebuilding image"
-        warn "If there are permission issues, run: ./odoo_docker_manager.sh fix-permissions"
+        warn "If there are permission issues, use option 5 to fix permissions"
     fi
 }
 
@@ -446,9 +435,9 @@ clean_data() {
     warn "WARNING: This operation will delete ALL Odoo data"
     error "This action is IRREVERSIBLE and cannot be undone"
     echo ""
-    
+
     read -p "$(echo -e ${YELLOW})Type 'CONFIRM' to proceed: $(echo -e ${NC})" confirm
-    
+
     if [[ "$confirm" == "CONFIRM" ]]; then
         log "Deleting data and volumes..."
         if docker compose -f "$COMPOSE_FILE" down -v; then
@@ -465,10 +454,10 @@ show_help() {
     clear_screen
     load_env_vars
     echo -e "${BOLD}📖 Help - Odoo Docker Manager${NC}\n"
-    
+
     echo -e "${BOLD}Available commands:${NC}"
     echo "  ./odoo_docker_manager.sh start           - Start Odoo services"
-    echo "  ./odoo_docker_manager.sh stop            - Stop Odoo services"  
+    echo "  ./odoo_docker_manager.sh stop            - Stop Odoo services"
     echo "  ./odoo_docker_manager.sh restart         - Restart Odoo services"
     echo "  ./odoo_docker_manager.sh rebuild         - Rebuild custom image"
     echo "  ./odoo_docker_manager.sh logs            - Show real-time logs"
@@ -477,7 +466,7 @@ show_help() {
     echo "  ./odoo_docker_manager.sh help            - Show this help"
     echo "  ./odoo_docker_manager.sh                 - Start interactive menu"
     echo ""
-    
+
     echo -e "${BOLD}Custom configuration (.env):${NC}"
     info "File: ./.env"
     info "Current version: Odoo ${ODOO_VERSION:-18}"
@@ -485,18 +474,18 @@ show_help() {
     [[ -n "${APT_PACKAGES:-}" ]] && info "APT packages: ${APT_PACKAGES}"
     [[ -n "${PIP_PACKAGES:-}" ]] && info "Python packages: ${PIP_PACKAGES} (with --break-system-packages)"
     echo ""
-    
+
     echo -e "${BOLD}Extra modules management:${NC}"
     info "Move modules to directory: ./extra-addons/"
     info "In Odoo: Apps > Update Apps List"
     echo ""
-    
+
     echo -e "${BOLD}Troubleshooting (SELinux/Permissions):${NC}"
     warn "If you have permission errors:"
-    info "2. Use: ./odoo_docker_manager.sh fix-permissions (to fix it)"
-    info "3. Permissions are checked automatically when starting/restarting"
+    info "Use option 5 (Fix permissions) from the menu"
+    info "Or run: ./odoo_docker_manager.sh fix-permissions"
     echo ""
-    
+
     echo -e "${BOLD}Additional information:${NC}"
     info "Database: PostgreSQL 15"
     info "DB User: ${POSTGRES_USER:-odoo} / ${POSTGRES_PASSWORD:-odoo}"
@@ -507,12 +496,12 @@ show_help() {
 
 show_menu() {
     local status=$(get_status)
-    
+
     echo -e "${BOLD}Available options:${NC}"
-    
+
     if [[ "$status" == "running" ]]; then
         echo "1) 🛑 Stop services"
-        echo "2) 🔄 Restart services" 
+        echo "2) 🔄 Restart services"
         echo "3) 🔨 Rebuild image"
         echo "4) 📋 View real-time logs"
         echo "5) 🔧 Fix permissions (SELinux/Docker)"
@@ -534,11 +523,11 @@ interactive_menu() {
         clear_screen
         show_status
         show_menu
-        
+
         read -p "$(echo -e ${CYAN})Select an option: $(echo -e ${NC})" choice
-        
+
         local status=$(get_status)
-        
+
         if [[ "$status" == "running" ]]; then
             case $choice in
                 1) stop; pause ;;
@@ -567,7 +556,7 @@ interactive_menu() {
 main() {
     check_deps
     setup_project
-    
+
     case "${1:-menu}" in
         start) start ;;
         stop) stop ;;
