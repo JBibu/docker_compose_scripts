@@ -71,7 +71,3 @@ sudo chcon -Rt svirt_sandbox_file_t extra-addons/
 - Docker & Docker Compose
 - 4GB RAM recommended
 - Linux, macOS, or Windows with WSL2
-
----
-
-[⬅️ Back to main repository](../README.md)
