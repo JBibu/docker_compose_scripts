@@ -494,6 +494,12 @@ show_help() {
     info "Python packages installed with --break-system-packages (avoids PEP668)"
 }
 
+open_odoo_shell() {
+    clear_screen
+    log "Opening Odoo shell..."
+    docker compose -f "$COMPOSE_FILE" exec odoo odoo shell
+}
+
 show_menu() {
     local status=$(get_status)
 
@@ -506,7 +512,8 @@ show_menu() {
         echo "4) 📋 View real-time logs"
         echo "5) 🔧 Fix permissions (SELinux/Docker)"
         echo "6) 📖 Show help"
-        echo "7) 🚪 Exit"
+        echo "7) 🐚 Open Odoo shell"
+        echo "8) 🚪 Exit"
     else
         echo "1) 🚀 Start services"
         echo "2) 🔨 Rebuild image"
@@ -536,7 +543,8 @@ interactive_menu() {
                 4) show_logs ;;
                 5) fix_permissions; pause ;;
                 6) show_help; pause ;;
-                7) echo -e "\n${GREEN}Goodbye!${NC}"; exit 0 ;;
+                7) open_odoo_shell; pause ;;
+                8) echo -e "\n${GREEN}Goodbye!${NC}"; exit 0 ;;
                 *) error "Invalid option, please try again"; pause ;;
             esac
         else
