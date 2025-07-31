@@ -2,6 +2,9 @@
 
 Docker Compose management scripts for developers. These scripts help you deploy and manage docker compose instances with reliable configurations and developer-friendly workflows.
 
+⚠️ Known Regression in Docker Buildx
+This project may be affected by a regression in recent buildx versions (docker/buildx#3328).
+
 ## What This Is
 
 A collection of Docker Compose management scripts for development.
