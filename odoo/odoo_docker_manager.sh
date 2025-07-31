@@ -138,6 +138,11 @@ EOF
 generate_dockerfile() {
     local dockerfile_path="$SCRIPT_DIR/Dockerfile"
 
+    # Solo generar si no existe o si se fuerza la regeneración
+    if [[ -f "$dockerfile_path" ]] && [[ "${FORCE_DOCKERFILE_REGEN:-}" != "true" ]]; then
+        return
+    fi
+
     # Load variables from .env
     load_env_vars
 
@@ -173,12 +178,23 @@ USER odoo
 EOF
 
     if [[ -n "$pip_packages" ]]; then
-        echo "RUN pip3 install --no-cache-dir --break-system-packages \\" >> "$dockerfile_path"
-        for package in $pip_packages; do
-            echo "    $package \\" >> "$dockerfile_path"
-        done
-        # Remove the last backslash
-        sed -i '$ s/ \\$//' "$dockerfile_path"
+        if [[ $(echo $pip_packages | wc -w) -eq 1 ]]; then
+            # Single package - no backslash needed
+            echo "RUN pip3 install --no-cache-dir --break-system-packages $pip_packages" >> "$dockerfile_path"
+        else
+            # Multiple packages - use backslashes correctly
+            echo "RUN pip3 install --no-cache-dir --break-system-packages \\" >> "$dockerfile_path"
+            local packages_array=($pip_packages)
+            for i in "${!packages_array[@]}"; do
+                if [[ $i -eq $((${#packages_array[@]} - 1)) ]]; then
+                    # Last package, no backslash
+                    echo "    ${packages_array[$i]}" >> "$dockerfile_path"
+                else
+                    # Not last package, add backslash
+                    echo "    ${packages_array[$i]} \\" >> "$dockerfile_path"
+                fi
+            done
+        fi
     else
         echo "# No additional Python packages configured" >> "$dockerfile_path"
     fi
@@ -410,8 +426,8 @@ rebuild() {
 
     local odoo_port="${ODOO_PORT:-8069}"
 
-    # Regenerate Dockerfile with current configuration
-    generate_dockerfile
+    # Forzar regeneración del Dockerfile con configuración actual
+    FORCE_DOCKERFILE_REGEN=true generate_dockerfile
 
     if docker compose -f "$COMPOSE_FILE" up -d --build --force-recreate; then
         success "Image rebuilt and Odoo started successfully"
