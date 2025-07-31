@@ -43,23 +43,9 @@ Main script for managing Odoo ERP deployments.
 
 ## Getting Started
 
-```bash
-# Get the scripts
-git clone https://github.com/JBibu/docker_compose_scripts.git
-cd docker_compose_scripts/odoo
-chmod +x odoo_docker_manager.sh
+### Available scripts:
 
-# Run interactive interface
-./odoo_docker_manager.sh
-
-# Or run specific commands
-./odoo_docker_manager.sh start
-./odoo_docker_manager.sh help
-```
-
-## Documentation
-
-For detailed setup and production deployment instructions, see the [complete Odoo documentation](odoo/README.md).
+[Odoo](odoo/README.md).
 
 ## License
 
