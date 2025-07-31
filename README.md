@@ -30,7 +30,7 @@ A collection of Docker Compose management scripts for development.
 
 ### Available scripts:
 
-- [Odoo](odoo).
+- [Odoo](odoo)
 
 ## License
 
