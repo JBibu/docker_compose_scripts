@@ -45,7 +45,7 @@ Main script for managing Odoo ERP deployments.
 
 ### Available scripts:
 
-[Odoo](odoo/README.md).
+[Odoo](odoo).
 
 ## License
 
