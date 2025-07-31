@@ -26,26 +26,11 @@ A collection of Docker Compose management scripts for development.
 - **macOS**: Requires Docker Desktop, works on macOS 11+
 - **Windows**: Use WSL2 with Docker Desktop, Ubuntu WSL recommended
 
-## Odoo Docker Manager
-
-**File**: `odoo/odoo_docker_manager.sh`
-
-Main script for managing Odoo ERP deployments.
-
-**What it does:**
-- Deploy complete Odoo stack with one command
-- Install APT and Python packages automatically
-- Manage Odoo modules
-- Configure security settings (including SELinux)
-- Handle backup and restore operations
-- Monitor performance and aggregate logs
-- Provide terminal-based management interface
-
 ## Getting Started
 
 ### Available scripts:
 
-[Odoo](odoo).
+- [Odoo](odoo).
 
 ## License
 
