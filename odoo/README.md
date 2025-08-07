@@ -1,5 +1,8 @@
 # Odoo Docker Manager
 
+<img width="330" height="387" alt="image" src="https://github.com/user-attachments/assets/44715277-b61e-4438-acda-5a9025c48ae3" />
+
+
 Management script for deploying Odoo ERP with Docker Compose. Sets up Odoo with PostgreSQL, custom modules, and package management in one command.
 
 ## Quick Start
