@@ -307,16 +307,6 @@ show_status() {
     echo -e "${BOLD}📊 System Status:${NC}"
     echo "  Odoo ${ODOO_VERSION:-18}: $(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*odoo"' | grep -q '"State":"running"' && echo "🟢 Running" || echo "🔴 Stopped")"
     echo "  PostgreSQL: $(docker compose -f "$COMPOSE_FILE" ps --format json 2>/dev/null | grep '"Name":".*db"' | grep -q '"State":"running"' && echo "🟢 Running" || echo "🔴 Stopped")"
-
-    # Show SELinux status if available
-    if command -v getenforce >/dev/null 2>&1; then
-        local selinux_status=$(getenforce 2>/dev/null || echo "Error")
-        local selinux_icon="ℹ️"
-        if [[ "$selinux_status" == "Enforcing" ]]; then
-            selinux_icon="⚠️"
-        fi
-        echo "  SELinux: $selinux_icon $selinux_status"
-    fi
     echo ""
 
     case $status in
