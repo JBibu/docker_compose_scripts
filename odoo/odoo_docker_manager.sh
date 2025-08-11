@@ -236,15 +236,18 @@ FROM odoo:${ODOO_VERSION:-18}
 USER root
 EOF
 
+    # Instalar paquetes APT si están definidos
     if [[ -n "${APT_PACKAGES:-}" ]]; then
         echo "RUN apt-get update && apt-get install -y $APT_PACKAGES && apt-get clean" >> "$SCRIPT_DIR/Dockerfile"
     fi
 
-    echo "USER odoo" >> "$SCRIPT_DIR/Dockerfile"
-
+    # Instalar paquetes Python como root ANTES de cambiar a usuario odoo
     if [[ -n "${PIP_PACKAGES:-}" ]]; then
         echo "RUN pip3 install --no-cache-dir --break-system-packages $PIP_PACKAGES" >> "$SCRIPT_DIR/Dockerfile"
     fi
+
+    # Cambiar a usuario odoo al final
+    echo "USER odoo" >> "$SCRIPT_DIR/Dockerfile"
 
     success "Dockerfile generated"
 }
